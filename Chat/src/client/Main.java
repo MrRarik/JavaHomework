@@ -1,3 +1,10 @@
+/**
+ * lesson 7 level 2
+ * @author Maluy Yaroslav
+ * @version data 19.08.19
+ */
+
+//Извините но у меня не получилось сделать личные сообщения.Можете сказать где я допустил ошибку в коде.
 package client;
 
 import javafx.application.Application;
