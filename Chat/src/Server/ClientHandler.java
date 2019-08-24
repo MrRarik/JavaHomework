@@ -22,44 +22,53 @@ public class ClientHandler {
             out = new DataOutputStream(socket.getOutputStream());
 
             new Thread(() -> {
-                try {
-                        while (true) {
-                            String str = in.readUTF();
-                            if (str.startsWith("/auth ")) {
-                                String[] token = str.split(" ");
-//                            String[] token = str.split(" +",3);
-                                String newNick = AuthService.getNickByLoginAndPass(token[1], token[2]);
-                                if (newNick != null) {
-                                    if (!server.isLoginAuthorised(token[1])) {
-                                        sendMSG("/authok " + newNick);
-                                        nick = newNick;
-                                        login = token[1];
-                                        server.subscribe(this);
-                                        System.out.println("Клиент " + nick + " авторизовался");
-                                        break;
-                                    } else {
-                                        sendMSG("Учетная запись уже используется");
-                                    }
-                                } else {
-                                    sendMSG("Неверный логин / пароль");
-                                }
-                            }
-                        }
-                        //цикл работы
-                        while (true) {
-                            String str = in.readUTF();
-                            if (str.equals("/end")) {
-                                sendMSG("/end");
-                                break;
-                            }
 
-                            if (str.startsWith("/w")) {
-                                String[] token = str.split(" +", 3);
-                                server.broadcastMsg(token[2], nick, token[1]);
+                try {
+                    socket.setSoTimeout(10000);
+                    if (nick == null) {
+                        socket.close();
+                    }
+
+                try {
+                    while (true) {
+                        String str = in.readUTF();
+                        if (str.startsWith("/auth ")) {
+                            String[] token = str.split(" ");
+                            String newNick = AuthService.getNickByLoginAndPass(token[1], token[2]);
+                            if (newNick != null) {
+                                if (!server.isLoginAuthorised(token[1])) {
+                                    sendMSG("/authok " + newNick);
+                                    nick = newNick;
+                                    login = token[1];
+                                    server.subscribe(this);
+                                    System.out.println("Клиент " + nick + " авторизовался");
+                                    break;
+                                } else {
+                                    sendMSG("Учетная запись уже используется");
+                                }
                             } else {
-                                server.broadcastMsg(str, nick);
+                                sendMSG("Неверный логин / пароль");
                             }
                         }
+                    }
+                    //цикл работы
+                    while (true) {
+                        String str = in.readUTF();
+                        if (str.equals("/end")) {
+                            sendMSG("/end");
+                            break;
+                        }
+
+                        if (str.startsWith("/w")) {
+                            String[] token = str.split(" +", 3);
+                            server.broadcastMsg(token[2], nick, token[1]);
+                        } else {
+                            server.broadcastMsg(str, nick);
+                        }
+                    }
+                } catch (SocketException e) {
+                    e.printStackTrace();
+                }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
